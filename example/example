@@ -2,7 +2,7 @@
 set -e
 
 NETWORK=example
-PROXY_BRANCH=prototype
+PROXY_BRANCH=mrc-3897
 
 HERE=$(realpath $(dirname $0))
 
@@ -13,9 +13,9 @@ if [[ ! -d $HERE/config/demo ]]; then
     git clone https://github.com/mrc-ide/wodin-demo-config config/demo
 fi
 
-# docker pull mrcide/wodin:main
-# docker pull mrcide/wodin-proxy:$PROXY_BRANCH
-# docker pull mrcide/odin.api:main
+docker pull mrcide/wodin:main
+docker pull mrcide/wodin-proxy:$PROXY_BRANCH
+docker pull mrcide/odin.api:main
 
 function cleanup() {
   set +e
