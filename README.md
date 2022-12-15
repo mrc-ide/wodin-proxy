@@ -73,3 +73,5 @@ docker cp ssl/key.pem proxy:/run/proxy/
 ```
 
 Once the certificate files are found, then the proxy will start running.
+
+See [`example/`](example) for a full example
