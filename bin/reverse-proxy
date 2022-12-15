@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+set -eu
+
+USE_SSL=0
+HTTP_HOST=
+
+function die_with_usage {
+    echo "Usage: $0 [--ssl] <hostname>"
+    if [[ $# -eq 2 ]]; then
+        echo "  ($2)"
+    fi
+    exit $1
+}
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --ssl)
+            USE_SSL=1
+            shift
+            ;;
+        --help)
+            die_with_usage 0
+            ;;
+        *)
+            if [[ ! -z $HTTP_HOST ]]; then
+                die_with_usage 1 "Unknown arg, or multiple position args"
+            fi
+            HTTP_HOST=$1
+            shift
+            ;;
+    esac
+done
+
+if [[ -z $HTTP_HOST ]]; then
+    die_with_usage 1 "No hostname given"
+fi
+
+if [[ $USE_SSL == 0 ]]; then
+    CONFIG_SRC=nginx-http.conf
+else
+    CONFIG_SRC=nginx-https.conf
+fi
+
+echo "Using HTTP_HOST=$HTTP_HOST in $CONFIG_SRC"
+envsubst '$HTTP_HOST' < /template/$CONFIG_SRC > /etc/nginx/nginx.conf
+
+if [[ $USE_SSL == 1 ]]; then
+    # These paths must match the paths as used in the nginx.conf
+    PATH_SSL=/run/proxy
+    PATH_CERT="$PATH_SSL/certificate.pem"
+    PATH_KEY="$PATH_SSL/key.pem"
+
+    # Wait for the ssl certificates to be copied in or generated
+    echo "Waiting for certificates at $PATH_CERT and $PATH_KEY"
+    while [ ! -e $PATH_CERT ] || [ ! -e $PATH_KEY ]; do
+        sleep 1
+    done
+
+    echo "Certificate files detected!"
+fi
+
+echo "Running nginx!"
+exec nginx -g "daemon off;"
