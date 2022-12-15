@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+set -e
+
+NETWORK=example
+PROXY_BRANCH=prototype
+
+HERE=$(realpath $(dirname $0))
+
+echo "Runing in $HERE"
+
+if [[ ! -d $HERE/config/demo ]]; then
+    mkdir -p $HERE/config
+    git clone https://github.com/mrc-ide/wodin-demo-config config/demo
+fi
+
+# docker pull mrcide/wodin:main
+# docker pull mrcide/wodin-proxy:$PROXY_BRANCH
+# docker pull mrcide/odin.api:main
+
+function cleanup() {
+  set +e
+  docker kill wodin-proxy
+  docker kill wodin-demo
+  docker kill odin.api
+  docker kill redis
+  docker rm wodin-proxy wodin-demo odin.api redis
+}
+trap cleanup EXIT
+
+docker rm --force redis odin.api wodin-demo wodin-proxy 2> /dev/null || \
+    /bin/true
+docker network create $NETWORK 2> /dev/null || /bin/true
+
+# After mrc-3896, we can use wodin-redis and pass in an override arg
+
+# Shared:
+docker run  -d --name redis --network=$NETWORK redis:6
+docker run  -d --name odin.api --network=$NETWORK mrcide/odin.api:main
+
+# We need something more sophisticated here, but we require that redis
+# is fully up and accepting connections before we try to start wodin,
+# or it will just fail to come up at all.
+echo "Waiting for redis to become available..."
+sleep 1
+
+docker run  -d --name wodin-demo --network=$NETWORK \
+       -v $HERE/config/demo:/wodin/config:ro \
+       mrcide/wodin:main --base-url=http://localhost/demo /wodin/config
+
+# We need something more sophisticated here too, or the proxy does not
+# come up.
+echo "Waiting for wodin to become available..."
+sleep 1
+
+docker run  -d --network $NETWORK --name wodin-proxy \
+       -p 80:80 \
+       -v $HERE/root:/wodin/root:ro \
+       -v $HERE/sites:/wodin/sites:ro \
+       mrcide/wodin-proxy:$PROXY_BRANCH localhost
+
+# Wait for Ctrl+C
+echo "Wodin example running at http://localhost"
+echo "Ctrl-C to stop and tear down containers"
+sleep infinity
