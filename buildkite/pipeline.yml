@@ -1,3 +1,3 @@
 steps:
   - label: ":whale::nginx: Build"
-    command: scripts/build
+    command: docker/build
