@@ -55,7 +55,7 @@ Bringing things up in https mode requires that we:
 
 The certificate must be valid for the hostname!
 
-First, bring up the container (with the first three changes from above made
+First, bring up the container (with the first three changes from above made):
 
 ```
 docker run -d --network wodin-nw --name proxy \
