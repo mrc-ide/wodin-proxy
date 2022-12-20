@@ -8,7 +8,7 @@ HERE=$(realpath $(dirname $0))
 
 if [[ ! -d $HERE/config/demo ]]; then
     mkdir -p $HERE/config
-    git clone https://github.com/mrc-ide/wodin-demo-config config/demo
+    git clone https://github.com/mrc-ide/wodin-demo-config $HERE/config/demo
 fi
 
 docker pull mrcide/wodin:main
