@@ -44,20 +44,13 @@ fi
 echo "Using HTTP_HOST=$HTTP_HOST in $CONFIG_SRC"
 envsubst '$HTTP_HOST' < /template/$CONFIG_SRC > /etc/nginx/nginx.conf
 
-if [[ $USE_SSL == 1 ]]; then
-    # These paths must match the paths as used in the nginx.conf
-    PATH_SSL=/run/proxy
-    PATH_CERT="$PATH_SSL/certificate.pem"
-    PATH_KEY="$PATH_SSL/key.pem"
+PATH_GO_SIGNAL=/run/proxy/go-signal
 
-    # Wait for the ssl certificates to be copied in or generated
-    echo "Waiting for certificates at $PATH_CERT and $PATH_KEY"
-    while [ ! -e $PATH_CERT ] || [ ! -e $PATH_KEY ]; do
-        sleep 1
-    done
-
-    echo "Certificate files detected!"
-fi
+# Wait for indication that the site files have been created and the ssl certs (if used) have been copied into place
+echo "Waiting for go signal at $PATH_GO_SIGNAL (use docker exec $HOSTNAME go-signal)"
+while [[ ! -e $PATH_GO_SIGNAL ]]; do
+    sleep 1
+done
 
 echo "Running nginx!"
 exec nginx -g "daemon off;"
