@@ -11,26 +11,15 @@ docker run -d --network wodin-nw --name proxy \
        -p 80:80 \
        -v $PWD/root:/wodin/root:ro \
        -e WODIN_SITE_DEMO=wodin-demo:3000 \
-       mrcide/wodin-proxy:latest localhost
+       mrcide/wodin-proxy:latest localhost \
+       --site demo=wodin-demo:3000 \
 ```
 
-Here, we use the `:ro` modifier on the bind mounts to emphasise that this is a readonly mount; the proxy will not modify anything here. The final argument is the hostname that the site will serve on. For a http-only site for local testing, `localhost` is a good idea, but for nothing else. We need to expose only port 80 to the host.
+Here, we use the `:ro` modifier on the bind mounts to emphasise that this is a readonly mount; the proxy will not modify anything here.
 
-Once this container is running, tell it about the sites you are serving:
+The `localhost` argument argument is the hostname that the site will serve on; for a http-only site for local testing, `localhost` is a good idea, but for nothing else (see below for https details). We need to expose only port 80 to the host here.
 
-```
-docker exec proxy add-site demo wodin-demo:3000
-```
-
-where the args are the path of the site (`demo` here) and the upstream wodin location (the container `wodin-demo` on port 3000). You run this command as many times as you need for as many sites as you have.
-
-Once all sites are configured, run
-
-```
-docker exec proxy go-signal
-```
-
-which tells nginx to start up.
+The last argument is a wodin site to proxy. There can be multiple of these arguments. The argument format is `<site>=<location>` where `site` is the path to serve the site below the proxy (see below). The `location` component is the `container:port` combination where the wodin instance is serving.
 
 With this setup,
 

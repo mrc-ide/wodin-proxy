@@ -14,9 +14,9 @@ if [[ ! -d $HERE/config/demo ]]; then
     git clone https://github.com/mrc-ide/wodin-demo-config config/demo
 fi
 
-# docker pull mrcide/wodin:mrc-3896
-# docker pull mrcide/wodin-proxy:$PROXY_BRANCH
-# docker pull mrcide/odin.api:main
+docker pull mrcide/wodin:main
+docker pull mrcide/wodin-proxy:$PROXY_BRANCH
+docker pull mrcide/odin.api:main
 
 function cleanup() {
   set +e
@@ -33,8 +33,8 @@ docker rm --force wodin-redis odin.api wodin-demo wodin-proxy 2> /dev/null || \
 docker network create $NETWORK 2> /dev/null || /bin/true
 
 # Shared:
-docker run  -d --name wodin-redis --network=$NETWORK redis:6
-docker run  -d --name odin.api --network=$NETWORK mrcide/odin.api:main
+docker run -d --name wodin-redis --network=$NETWORK redis:6
+docker run -d --name odin.api --network=$NETWORK mrcide/odin.api:main
 
 # We need something more sophisticated here, but we require that redis
 # is fully up and accepting connections before we try to start wodin,
@@ -54,13 +54,12 @@ docker run -d --name wodin-demo --network=$NETWORK \
 echo "Waiting for wodin to become available..."
 sleep 1
 
-docker run -it --rm --network $NETWORK --name wodin-proxy \
+# -it --rm
+docker run -d --network $NETWORK --name wodin-proxy \
        -p 80:80 \
        -v $HERE/root:/wodin/root:ro \
-       mrcide/wodin-proxy:$PROXY_BRANCH localhost
-
-docker exec wodin-proxy add-site demo wodin-demo:3000
-docker exec wodin-proxy go-signal
+       mrcide/wodin-proxy:$PROXY_BRANCH localhost \
+       --site demo=wodin-demo:3000
 
 # Wait for Ctrl+C
 echo "Wodin example running at http://localhost"

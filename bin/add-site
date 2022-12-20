@@ -1,25 +1,23 @@
 #!/usr/bin/env bash
 set -eu
 function die_with_usage {
-    echo "Usage: $0 <path> <upstream>"
+    echo "Usage: $0 <path> <upstream> <dest>"
     if [[ $# -eq 2 ]]; then
         echo "  ($2)"
     fi
     exit 1
 }
 
-if [[ $# != 2 ]]; then
+if [[ $# != 3 ]]; then
     die_with_usage
 fi
 
 SITE_PATH=$1
 SITE_UPSTREAM=$2
-DEST=/wodin/sites
+DEST=$3
 
 mkdir -p $DEST
 DEST_CONF="$DEST/$SITE_PATH.conf"
-
-echo "Writing site config at $DEST_CONF"
 
 cat <<EOF > $DEST_CONF
 location /$SITE_PATH {
