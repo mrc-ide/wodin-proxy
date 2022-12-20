@@ -37,7 +37,7 @@ while [[ $# -gt 0 ]]; do
             if [[ $# -lt 2 ]]; then
                 die_with_usage 1 "Missing argument to --site"
             fi
-            SITES+=$2
+            SITES+=($2)
             shift 2
             ;;
         *)
@@ -67,9 +67,9 @@ fi
 echo "Using HTTP_HOST=$HTTP_HOST in $CONFIG_SRC"
 envsubst '$HTTP_HOST' < /template/$CONFIG_SRC > /etc/nginx/nginx.conf
 
-echo "Writing sites:"
-for VALUE in "${SITES[@]}"; do
-    add_site $VALUE
+echo "Writing ${#SITES[@]} sites:"
+for SITE in "${SITES[@]}"; do
+    add_site $SITE
 done
 
 if [[ $USE_SSL == 1 ]]; then
