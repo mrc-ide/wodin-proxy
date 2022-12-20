@@ -16,7 +16,6 @@ function die_with_usage {
 
 function add_site {
     IFS="="
-    echo "processing $1"
     read -a SITE <<< $1
     if [[ "${#SITE[@]}" != 2 ]]; then
         die_with_usage 1 "Invalid site specificiation $1"
