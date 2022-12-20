@@ -15,13 +15,13 @@ function die_with_usage {
 }
 
 function add_site {
-    IFS="="
-    read -a SITE <<< $1
-    if [[ "${#SITE[@]}" != 2 ]]; then
-        die_with_usage 1 "Invalid site specificiation $1"
+    SITE=$1
+    SITE_UPSTREAM=${SITE%=*}   # remove suffix starting with "="
+    SITE_PATH=${SITE#*=}   # remove prefix ending in "_"
+    if [[ $SITE_UPSTREAM = $SITE_PATH || "$SITE_UPSTREAM=$SITE_PATH" != $SITE ]]; then
+        echo "Invalid site specification $SITE"
+        exit 1
     fi
-    SITE_PATH="${SITE[0]}"
-    SITE_UPSTREAM="${SITE[1]}"
     echo "... $HTTP_PROTOCOL://$HTTP_HOST/$SITE_PATH => $SITE_UPSTREAM"
     add-site "$SITE_PATH" "$SITE_UPSTREAM" "/wodin/sites"
 }
