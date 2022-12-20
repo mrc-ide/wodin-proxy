@@ -4,8 +4,7 @@ set -e
 NETWORK=example
 PROXY_BRANCH=mrc-3897
 
-# HERE=$(realpath $(dirname $0))
-HERE=$PWD
+HERE=$(realpath $(dirname $0))
 
 if [[ ! -d $HERE/config/demo ]]; then
     mkdir -p $HERE/config
