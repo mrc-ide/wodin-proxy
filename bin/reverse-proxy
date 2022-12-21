@@ -68,7 +68,8 @@ else
 fi
 
 echo "Using HTTP_HOST=$HTTP_HOST in $CONFIG_SRC"
-HTTP_HOST=$HTTP_HOST envsubst /template/$CONFIG_SRC > /etc/nginx/nginx.conf
+HTTP_HOST=$HTTP_HOST envsubst '$HTTP_HOST' < /template/$CONFIG_SRC > \
+         /etc/nginx/nginx.conf
 
 echo "Writing ${#SITES[@]} sites:"
 for SITE in "${SITES[@]}"; do
