@@ -16,8 +16,8 @@ function die_with_usage {
 
 function add_site {
     SITE=$1
-    SITE_PATH=${SITE%=*}   # remove suffix starting with "="
-    SITE_UPSTREAM=${SITE#*=}   # remove prefix ending in "_"
+    SITE_PATH=${SITE%=*}     # remove suffix starting with "="
+    SITE_UPSTREAM=${SITE#*=} # remove prefix ending in "="
     if [[ $SITE_UPSTREAM = $SITE_PATH ]]; then
         echo "Error parsing site $SITE: Expected a '=' in the string"
         exit 1
