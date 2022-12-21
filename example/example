@@ -19,19 +19,19 @@ function cleanup() {
   set +e
   docker kill wodin-proxy
   docker kill wodin-demo
-  docker kill odin.api
+  docker kill wodin-api
   docker kill wodin-redis
-  docker rm wodin-proxy wodin-demo odin.api wodin-redis
+  docker rm wodin-proxy wodin-demo wodin-api wodin-redis
 }
 trap cleanup EXIT
 
-docker rm --force wodin-redis odin.api wodin-demo wodin-proxy 2> /dev/null || \
+docker rm --force wodin-redis wodin-api wodin-demo wodin-proxy 2> /dev/null || \
     /bin/true
 docker network create $NETWORK 2> /dev/null || /bin/true
 
 # Shared:
 docker run -d --name wodin-redis --network=$NETWORK redis:6
-docker run -d --name odin.api --network=$NETWORK mrcide/odin.api:main
+docker run -d --name wodin-api --network=$NETWORK mrcide/odin.api:main
 
 # We need something more sophisticated here, but we require that redis
 # is fully up and accepting connections before we try to start wodin,
@@ -41,8 +41,9 @@ sleep 1
 
 docker run -d --name wodin-demo --network=$NETWORK \
        -v $HERE/config/demo:/wodin/config:ro \
-       mrcide/wodin:mrc-3896 \
+       mrcide/wodin:main \
        --redis-url=redis://wodin-redis:6379 \
+       --odin-api=http://wodin-api:8001 \
        --base-url=http://localhost/demo \
        /wodin/config
 
