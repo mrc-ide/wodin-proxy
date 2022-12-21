@@ -16,10 +16,13 @@ function die_with_usage {
 
 function add_site {
     SITE=$1
-    SITE_UPSTREAM=${SITE%=*}   # remove suffix starting with "="
-    SITE_PATH=${SITE#*=}   # remove prefix ending in "_"
-    if [[ $SITE_UPSTREAM = $SITE_PATH || "$SITE_UPSTREAM=$SITE_PATH" != $SITE ]]; then
-        echo "Invalid site specification $SITE"
+    SITE_PATH=${SITE%=*}   # remove suffix starting with "="
+    SITE_UPSTREAM=${SITE#*=}   # remove prefix ending in "_"
+    if [[ $SITE_UPSTREAM = $SITE_PATH ]]; then
+        echo "Error parsing site $SITE: Expected a '=' in the string"
+        exit 1
+    elif [[ "$SITE_PATH=$SITE_UPSTREAM" != $SITE ]]; then
+        echo "Error parsing site $SITE: Exected exactly one '=' in the string"
         exit 1
     fi
     echo "... $HTTP_PROTOCOL://$HTTP_HOST/$SITE_PATH => $SITE_UPSTREAM"
