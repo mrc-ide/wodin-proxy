@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+touch /run/proxy/go-signal

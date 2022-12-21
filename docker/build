@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -ex
+
+HERE=$(dirname $0)
+. $HERE/common
+
+docker build --pull \
+       -f docker/Dockerfile \
+       --tag $TAG_SHA \
+       --tag $TAG_BRANCH \
+       .
+
+# We always push the SHA tagged versions, for debugging if the tests
+# after this step fail
+docker push $TAG_SHA
+docker push $TAG_BRANCH
+
+if [ $GIT_BRANCH == "main" ]; then
+   docker tag $TAG_SHA $TAG_LATEST
+   docker push $TAG_LATEST
+fi

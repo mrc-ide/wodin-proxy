@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -eu
+function die_with_usage {
+    echo "Usage: $0 <path> <upstream> <dest>"
+    if [[ $# -eq 2 ]]; then
+        echo "  ($2)"
+    fi
+    exit 1
+}
+
+if [[ $# != 3 ]]; then
+    die_with_usage
+fi
+
+SITE_PATH=$1
+SITE_UPSTREAM=$2
+DEST=$3
+
+mkdir -p $DEST
+DEST_CONF="$DEST/$SITE_PATH.conf"
+
+cat <<EOF > $DEST_CONF
+location /$SITE_PATH {
+    return 301 \$scheme://\$host/$SITE_PATH/;
+}
+location  /$SITE_PATH/ {
+    rewrite /$SITE_PATH/(.*) /\$1  break;
+    proxy_pass         http://$SITE_UPSTREAM/;
+    proxy_redirect     off;
+    proxy_set_header   Host \$host;
+}
+EOF

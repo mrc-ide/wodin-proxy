@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+set -eu
+
+USE_SSL=0
+HTTP_PROTOCOL=http
+HTTP_HOST=
+SITES=()
+
+function die_with_usage {
+    echo "Usage: $0 [--ssl] <hostname> [--site SITE]..."
+    if [[ $# -eq 2 ]]; then
+        echo "  ($2)"
+    fi
+    exit $1
+}
+
+function add_site {
+    SITE=$1
+    SITE_PATH=${SITE%=*}     # remove suffix starting with "="
+    SITE_UPSTREAM=${SITE#*=} # remove prefix ending in "="
+    if [[ $SITE_UPSTREAM = $SITE_PATH ]]; then
+        echo "Error parsing site $SITE: Expected a '=' in the string"
+        exit 1
+    elif [[ "$SITE_PATH=$SITE_UPSTREAM" != $SITE ]]; then
+        echo "Error parsing site $SITE: Exected exactly one '=' in the string"
+        exit 1
+    fi
+    echo "... $HTTP_PROTOCOL://$HTTP_HOST/$SITE_PATH => $SITE_UPSTREAM"
+    add-site "$SITE_PATH" "$SITE_UPSTREAM" "/wodin/sites"
+}
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --ssl)
+            USE_SSL=1
+            HTTP_PROTOCOL=https
+            shift
+            ;;
+        --site)
+            if [[ $# -lt 2 ]]; then
+                die_with_usage 1 "Missing argument to --site"
+            fi
+            SITES+=($2)
+            shift 2
+            ;;
+        *)
+            if [[ ! -z $HTTP_HOST ]]; then
+                die_with_usage 1 "Unknown arg, or multiple position args"
+            fi
+            HTTP_HOST=$1
+            shift
+            ;;
+    esac
+done
+
+if [[ -z $HTTP_HOST ]]; then
+    die_with_usage 1 "No hostname given"
+fi
+
+if [[ "${#SITES[@]}" == 0 ]]; then
+    die_with_usage 1 "At least one --site argument is required"
+fi
+
+if [[ $USE_SSL == 0 ]]; then
+    CONFIG_SRC=nginx-http.conf
+else
+    CONFIG_SRC=nginx-https.conf
+fi
+
+echo "Using HTTP_HOST=$HTTP_HOST in $CONFIG_SRC"
+HTTP_HOST=$HTTP_HOST envsubst '$HTTP_HOST' < /template/$CONFIG_SRC > \
+         /etc/nginx/nginx.conf
+
+echo "Writing ${#SITES[@]} sites:"
+for SITE in "${SITES[@]}"; do
+    add_site $SITE
+done
+
+if [[ $USE_SSL == 1 ]]; then
+    # These paths must match the paths as used in the nginx.conf
+    PATH_SSL=/run/proxy
+    PATH_CERT="$PATH_SSL/certificate.pem"
+    PATH_KEY="$PATH_SSL/key.pem"
+
+    # Wait for the ssl certificates to be copied in or generated
+    echo "Waiting for certificates at $PATH_CERT and $PATH_KEY"
+    while [ ! -e $PATH_CERT ] || [ ! -e $PATH_KEY ]; do
+        sleep 1
+    done
+
+    echo "Certificate files detected!"
+fi
+
+echo "Running nginx!"
+exec nginx -g "daemon off;"
