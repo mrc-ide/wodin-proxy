@@ -11,9 +11,9 @@ if [[ ! -d $HERE/config/demo ]]; then
     git clone https://github.com/mrc-ide/wodin-demo-config $HERE/config/demo
 fi
 
-docker pull mrcide/wodin:main
-docker pull mrcide/wodin-proxy:$PROXY_BRANCH
-docker pull mrcide/odin.api:main
+# docker pull mrcide/wodin:main
+# docker pull mrcide/wodin-proxy:$PROXY_BRANCH
+# docker pull mrcide/odin.api:main
 
 function cleanup() {
   set +e
